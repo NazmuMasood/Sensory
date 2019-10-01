@@ -11,7 +11,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "sensors.db";
     public static final String TABLE_NAME = "sensorData";
-    public static final String DATA_INDEX = "dataIndex";
+    public static final String DATA_INDEX = "DATA_INDEX";
     public static final String USER_ACCELERATION_X = "USER_ACCELERATION_X";
     public static final String USER_ACCELERATION_Y = "USER_ACCELERATION_Y";
     public static final String USER_ACCELERATION_Z = "USER_ACCELERATION_Z";
