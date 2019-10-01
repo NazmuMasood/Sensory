@@ -1,27 +1,38 @@
 package com.example.sensory;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
-    Button startButton, stopButton; TextView sensorInfoTV;
-    TextView accInfoTV, gyroInfoTV, gravityInfoTV, orientationInfoTV;
-    Boolean record = false;
-    Boolean hasAccelerometer=false, hasGyroscope=false, hasGravity=false, hasMagnetometer=false;
-    SensorManager sensorManager; Sensor accelerometer, gyroscope, gravity, magnetometer;
 
+    Button startButton, stopButton; TextView sensorInfoTV;
+    TextView accInfoTV, gyroInfoTV, gravityInfoTV, orientationInfoTV,
+            accUncalibInfoTV, gyroUncalibInfoTV;
+    Boolean record = false; DatabaseHelper myDb;
+    Boolean hasAccelerometer=false, hasGyroscope=false,
+            hasGravity=false, hasMagnetometer=false;
+    SensorManager sensorManager;
+    Sensor accelerometer, gyroscope, gravity, magnetometer,
+            accelerometerUncalib, gyroscopeUncalib;
+
+    @TargetApi(Build.VERSION_CODES.P)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,7 +56,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gyroInfoTV = findViewById(R.id.gyroInfoTV);
         gravityInfoTV = findViewById(R.id.gravityInfoTV);
         orientationInfoTV = findViewById(R.id.orientaionInfoTV);
+        accUncalibInfoTV = findViewById(R.id.accUncalibInfoTV);
+        gyroUncalibInfoTV = findViewById(R.id.gyroUncalibInfoTV);
         sensorInfoTV = findViewById(R.id.sensorInfo);
+        myDb = new DatabaseHelper(this);
 
         //See which sensors are available
         checkSensorAvailibility();
@@ -60,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             sensorNames = sensorNames+"\n"+s.getName();
         }
         accInfoTV.setText(sensorNames+"\n\nNo accelerometer data available");
-        //gyroInfoTV.setText("");gravityInfoTV.setText("");
 
         //Accelerometer sensor
         if (hasAccelerometer) {
@@ -80,12 +93,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             hasMagnetometer = true; checkSensorAvailibility();
             magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         }
+        //Accelerometer_uncalibrated sensor
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) != null) {
+            accelerometerUncalib = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
+        }
+        //Gravity_uncalibrated sensor
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) != null) {
+            gyroscopeUncalib = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
+        }
 
         //Registering sensor listeners
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_FASTEST);
-        sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(this, accelerometer, 20000);
+        sensorManager.registerListener(this, gyroscope, 20000);
+        sensorManager.registerListener(this, gravity, 20000);
+        sensorManager.registerListener(this, magnetometer, 20000);
+        sensorManager.registerListener(this, accelerometerUncalib, 20000);
+        sensorManager.registerListener(this, gyroscopeUncalib, 20000);
+
 
     }
 
@@ -113,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (record) {
+            Float[] dataArray = new Float[12];
 
             float[] accelerometerReading = new float[3];
             float[] magnetometerReading = new float[3];
@@ -128,11 +153,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 userAccY = event.values[1];
                 userAccZ = event.values[2];
 
+                userAccX = Math.round(userAccX*1000000f)/1000000f;
+                userAccY = Math.round(userAccY*1000000f)/1000000f;
+                userAccZ = Math.round(userAccZ*1000000f)/1000000f;
+
                 info = info + "userAcceleration.X " + userAccX + "\n" +
                         "userAcceleration.Y " + userAccY + "\n" +
                         "userAcceleration.Z " + userAccZ + "\n\n";
 
                 accInfoTV.setText(info);
+
+                dataArray[0]= userAccX;
+                dataArray[1]= userAccY;
+                dataArray[2]= userAccZ;
 
                 //System.arraycopy(event.values, 0, accelerometerReading,
                        // 0, accelerometerReading.length);
@@ -148,11 +181,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 rotationRateY = event.values[1];
                 rotationRateZ = event.values[2];
 
+                rotationRateX = Math.round(rotationRateX*1000000f)/1000000f;
+                rotationRateY = Math.round(rotationRateY*1000000f)/1000000f;
+                rotationRateZ = Math.round(rotationRateZ*1000000f)/1000000f;
+
                 info = "rotationRate.X " + rotationRateX + "\n" +
                         "rotationRate.Y " + rotationRateY + "\n" +
                         "rotationRate.Z " + rotationRateZ + "\n\n";
 
                 gyroInfoTV.setText(info);
+
+                dataArray[3]= rotationRateX;
+                dataArray[4]= rotationRateY;
+                dataArray[5]= rotationRateZ;
             }
 
             //If the sensor is gravity
@@ -164,11 +205,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 gravityY = event.values[1];
                 gravityZ = event.values[2];
 
+                gravityX = Math.round(gravityX*1000000f)/1000000f;
+                gravityY = Math.round(gravityY*1000000f)/1000000f;
+                gravityZ = Math.round(gravityZ*1000000f)/1000000f;
+
                 info = "gravity.X " + gravityX + "\n" +
                         "gravity.Y " + gravityY + "\n" +
                         "gravity.Z " + gravityZ + "\n\n";
 
                 gravityInfoTV.setText(info);
+
+                dataArray[6]= gravityX;
+                dataArray[7]= gravityY;
+                dataArray[8]= gravityZ;
             }
 
             //If the sensor is magnetometer
@@ -188,14 +237,59 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 Float pitch = orientationAngles[1];
                 Float roll = orientationAngles[2];
 
+                /*azimuth = Math.round(azimuth*1000000f)/1000000f;
+                pitch = Math.round(pitch*1000000f)/1000000f;
+                roll = Math.round(roll*1000000f)/1000000f;*/
+
                 String info = "";
                 info = "attitude.Azimuth " + azimuth + "\n" +
                         "attitude.Pitch " + pitch + "\n" +
                         "attitude.Roll " + roll + "\n\n";
 
                 orientationInfoTV.setText(info);
+
+                dataArray[9]= azimuth;
+                dataArray[10]= pitch;
+                dataArray[11]= roll;
             }
 
+            //If the sensor is accelerometer_uncalibrated
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) {
+                String info = "";
+                Float userAccX, userAccY, userAccZ;
+
+                userAccX = event.values[0];
+                userAccY = event.values[1];
+                userAccZ = event.values[2];
+
+                info = info + "userAccelerationUncalibrated.X " + userAccX + "\n" +
+                        "userAccelerationUncalibrated.Y " + userAccY + "\n" +
+                        "userAccelerationUncalibrated.Z " + userAccZ + "\n\n";
+
+                accUncalibInfoTV.setText(info);
+            }
+
+            //If the sensor is gyroscope
+            if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE_UNCALIBRATED) {
+                String info = "";
+                Float rotationRateX, rotationRateY, rotationRateZ;
+
+                rotationRateX = event.values[0];
+                rotationRateY = event.values[1];
+                rotationRateZ = event.values[2];
+
+                info = "\nrotationRateUncalibrated.X " + rotationRateX + "\n" +
+                        "rotationRateUncalibrated.Y " + rotationRateY + "\n" +
+                        "rotationRateUncalibrated.Z " + rotationRateZ + "\n\n";
+
+                gyroUncalibInfoTV.setText(info);
+            }
+
+            //Write this event values into database
+            /*Boolean isInserted = myDb.writeDataToDb(dataArray);
+            if (!isInserted){
+                Toast.makeText(this, "Not inserted", Toast.LENGTH_SHORT).show();
+            }*/
         }
     }
 

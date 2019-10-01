@@ -87,6 +87,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="No orientation data available" />
+
+            <TextView
+                android:id="@+id/accUncalibInfoTV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No accelerometer_uncalibrated data available" />
+
+            <TextView
+                android:id="@+id/gyroUncalibInfoTV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No gravity_uncalibrated data available" />
         </LinearLayout>
     </ScrollView>
 
