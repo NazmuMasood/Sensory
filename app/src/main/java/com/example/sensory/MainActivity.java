@@ -302,10 +302,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             //Write this event values into database
             //myDb.writeDataToDb(dataArray);
-            /*Boolean isInserted = myDb.writeDataToDb(dataArray);
-            if (!isInserted){
-                Toast.makeText(this, "Not inserted", Toast.LENGTH_SHORT).show();
-            }*/
         }
     }
 
