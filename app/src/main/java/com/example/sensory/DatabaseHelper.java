@@ -10,20 +10,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     SQLiteDatabase db;
 
     public static final String DATABASE_NAME = "sensors.db";
-    public static final String TABLE_NAME = "sensor_data";
-    public static final String DATA_INDEX = "`index`";
-    public static final String USER_ACCELERATION_X = "userAccelerationX";
-    public static final String USER_ACCELERATION_Y = "userAccelerationY";
-    public static final String USER_ACCELERATION_Z = "userAccelerationZ";
-    public static final String ROTATION_RATE_X = "rotationRateX";
-    public static final String ROTATION_RATE_Y = "rotationRateY";
-    public static final String ROTATION_RATE_Z = "rotationRateZ";
-    public static final String GRAVITY_X = "gravityX";
-    public static final String GRAVITY_Y = "gravityY";
-    public static final String GRAVITY_Z = "gravityZ";
-    public static final String ATTITUDE_AZIMUTH = "attitudeAzimuth";
-    public static final String ATTITUDE_PITCH = "attitudePitch";
-    public static final String ATTITUDE_ROLL = "attitudeRoll";
+    public static final String TABLE_NAME = "sensorData";
+    public static final String DATA_INDEX = "dataIndex";
+    public static final String USER_ACCELERATION_X = "USER_ACCELERATION_X";
+    public static final String USER_ACCELERATION_Y = "USER_ACCELERATION_Y";
+    public static final String USER_ACCELERATION_Z = "USER_ACCELERATION_Z";
+    public static final String ROTATION_RATE_X = "ROTATION_RATE_X";
+    public static final String ROTATION_RATE_Y = "ROTATION_RATE_Y";
+    public static final String ROTATION_RATE_Z = "ROTATION_RATE_Z";
+    public static final String GRAVITY_X = "GRAVITY_X";
+    public static final String GRAVITY_Y = "GRAVITY_Y";
+    public static final String GRAVITY_Z = "GRAVITY_Z";
+    public static final String ATTITUDE_AZIMUTH = "ATTITUDE_AZIMUTH";
+    public static final String ATTITUDE_PITCH = "ATTITUDE_PITCH";
+    public static final String ATTITUDE_ROLL = "ATTITUDE_ROLL";
 
 
     public DatabaseHelper(Context context){
@@ -44,6 +44,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME);
         onCreate(db);
+    }
+
+    public void deleteDb(){
+        db.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME);
     }
 
     //WRITE SENSOR DATA TO DATABASE

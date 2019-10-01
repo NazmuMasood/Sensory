@@ -22,7 +22,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    Button startButton, stopButton; TextView sensorInfoTV;
+    Button startButton, stopButton, deleteDbButton, createDbButton; TextView sensorInfoTV;
     TextView accInfoTV, gyroInfoTV, gravityInfoTV, orientationInfoTV,
             accUncalibInfoTV, gyroUncalibInfoTV;
     Boolean record = false; DatabaseHelper myDb;
@@ -52,6 +52,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 record = false;
             }
         });
+        deleteDbButton = findViewById(R.id.deleteDbButton);
+        deleteDbButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity.this.deleteDatabase("sensors.db");
+            }
+        });
+        createDbButton = findViewById(R.id.createDbButton);
+        createDbButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                myDb = new DatabaseHelper(MainActivity.this);
+            }
+        });
+
         accInfoTV = findViewById(R.id.accInfoTV);
         gyroInfoTV = findViewById(R.id.gyroInfoTV);
         gravityInfoTV = findViewById(R.id.gravityInfoTV);
@@ -59,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accUncalibInfoTV = findViewById(R.id.accUncalibInfoTV);
         gyroUncalibInfoTV = findViewById(R.id.gyroUncalibInfoTV);
         sensorInfoTV = findViewById(R.id.sensorInfo);
-        myDb = new DatabaseHelper(this);
+        //myDb = new DatabaseHelper(this);
 
         //See which sensors are available
         checkSensorAvailibility();
@@ -286,6 +301,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
 
             //Write this event values into database
+            //myDb.writeDataToDb(dataArray);
             /*Boolean isInserted = myDb.writeDataToDb(dataArray);
             if (!isInserted){
                 Toast.makeText(this, "Not inserted", Toast.LENGTH_SHORT).show();
