@@ -5,6 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
+
+import java.io.File;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     SQLiteDatabase db;
@@ -27,17 +30,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     public DatabaseHelper(Context context){
-        super(context, DATABASE_NAME, null, 1);
+        super(context, Environment.getExternalStorageDirectory()
+                + File.separator + "/DataBase/" + File.separator
+                + DATABASE_NAME, null, 1);
         db = this.getWritableDatabase();
     }
 
     @Override
     public void onCreate(SQLiteDatabase db){
-        db.execSQL("create table " + TABLE_NAME + "(DATA_INDEX INTEGER PRIMARY KEY AUTOINCREMENT," +
+        db.execSQL("create table " + TABLE_NAME +
+                "(DATA_INDEX INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "USER_ACCELERATION_X REAL,USER_ACCELERATION_Y REAL,USER_ACCELERATION_Z REAL," +
                 "ROTATION_RATE_X REAL,ROTATION_RATE_Y REAL,ROTATION_RATE_Z REAL," +
                 "GRAVITY_X REAL,GRAVITY_Y REAL, GRAVITY_Z REAL," +
-                "ATTITUDE_AZIMUTH REAL,ATTITUDE_PITCH REAL,ATTITUDE_ROLL REAL)");
+                "ATTITUDE_AZIMUTH REAL,ATTITUDE_PITCH REAL,ATTITUDE_ROLL REAL)"
+        );
     }
 
     @Override
@@ -46,7 +53,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void deleteDb(){
+    public void deleteTable(){
         db.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME);
     }
 

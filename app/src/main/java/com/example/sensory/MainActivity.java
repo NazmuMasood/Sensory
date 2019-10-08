@@ -2,7 +2,10 @@ package com.example.sensory;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -13,12 +16,17 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.List;
+
+import static com.example.sensory.DatabaseHelper.DATABASE_NAME;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -31,18 +39,42 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager;
     Sensor accelerometer, gyroscope, gravity, magnetometer,
             accelerometerUncalib, gyroscopeUncalib;
+    private static final int PERMISSION_REQUEST_CODE = 1; Boolean permissionGranted = false;
 
-    @TargetApi(Build.VERSION_CODES.P)
+    @TargetApi(Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (checkPermission())
+        {
+            // Code for above or equal 23 API Oriented Device
+            // Your Permission granted already .Do next code
+            permissionGranted = true;
+        } else {
+            requestPermission(); // Code for permission
+        }
+
         startButton = findViewById(R.id.startButton);
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                record = true;
+                if (permissionGranted) {
+                    //record = true;
+                    for (int i=0; i<1; i++){
+                        Float[] dataArray = new Float[12];
+                        float count = 0.10f;
+                        for (int j=0; j<dataArray.length; j++) {
+                            dataArray[j] = 0.10f+count;
+                            count+=0.10;
+                        }
+                        myDb.writeDataToDb(dataArray);
+                    }
+                }
+                else {Toast.makeText(MainActivity.this, "Please grant storage permission first",
+                        Toast.LENGTH_SHORT)
+                        .show();}
             }
         });
         stopButton = findViewById(R.id.stopButton);
@@ -56,14 +88,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         deleteDbButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity.this.deleteDatabase("sensors.db");
+                //myDb.deleteTable();
+                MainActivity.this.deleteDatabase(Environment.getExternalStorageDirectory()
+                        + File.separator + "/DataBase/" + File.separator
+                        + DATABASE_NAME);
+                Toast.makeText(MainActivity.this, "Database deleted",
+                        Toast.LENGTH_SHORT)
+                        .show();
             }
         });
         createDbButton = findViewById(R.id.createDbButton);
         createDbButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                myDb = new DatabaseHelper(MainActivity.this);
+                if (permissionGranted) {
+                    myDb = new DatabaseHelper(MainActivity.this);
+                    Toast.makeText(MainActivity.this, "Database created",
+                            Toast.LENGTH_SHORT)
+                            .show();
+                }
+                else {Toast.makeText(MainActivity.this, "Please grant storage permission first",
+                        Toast.LENGTH_SHORT)
+                        .show();}
             }
         });
 
@@ -108,22 +154,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             hasMagnetometer = true; checkSensorAvailibility();
             magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         }
-        //Accelerometer_uncalibrated sensor
+        /*//Accelerometer_uncalibrated sensor
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) != null) {
             accelerometerUncalib = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED);
         }
         //Gravity_uncalibrated sensor
         if (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) != null) {
             gyroscopeUncalib = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
-        }
+        }*/
 
+        /*int samplingPeriod = 500000;
         //Registering sensor listeners
-        sensorManager.registerListener(this, accelerometer, 20000);
-        sensorManager.registerListener(this, gyroscope, 20000);
-        sensorManager.registerListener(this, gravity, 20000);
-        sensorManager.registerListener(this, magnetometer, 20000);
-        sensorManager.registerListener(this, accelerometerUncalib, 20000);
-        sensorManager.registerListener(this, gyroscopeUncalib, 20000);
+        sensorManager.registerListener(this, accelerometer, samplingPeriod);
+        sensorManager.registerListener(this, gyroscope, samplingPeriod);
+        sensorManager.registerListener(this, gravity, samplingPeriod);
+        sensorManager.registerListener(this, magnetometer, samplingPeriod);*/
+        /*sensorManager.registerListener(this, accelerometerUncalib, samplingPeriod);
+        sensorManager.registerListener(this, gyroscopeUncalib, samplingPeriod);*/
 
 
     }
@@ -300,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 gyroUncalibInfoTV.setText(info);
             }
 
-            //Write this event values into database
+            //Write the event values into database
             //myDb.writeDataToDb(dataArray);
         }
     }
@@ -308,5 +355,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    private boolean checkPermission() {
+        int result = ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (result == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void requestPermission() {
+
+        if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Toast.makeText(MainActivity.this, "Write External Storage permission allows us to do store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
+        } else {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.e("value", "Permission Granted, Now you can use local drive .");
+                } else {
+                    Log.e("value", "Permission Denied, You cannot use local drive .");
+                }
+                break;
+        }
     }
 }
