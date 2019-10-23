@@ -23,7 +23,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.opencsv.CSVWriter;
+
 import java.io.File;
+import java.io.FileWriter;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static com.example.sensory.DatabaseHelper.DATABASE_NAME;
@@ -40,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Sensor accelerometer, gyroscope, gravity, magnetometer,
             accelerometerUncalib, gyroscopeUncalib;
     private static final int PERMISSION_REQUEST_CODE = 1; Boolean permissionGranted = false;
+
+    ArrayList<String[]> bishaalArray = new ArrayList<>();
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
@@ -61,8 +70,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onClick(View v) {
                 if (permissionGranted) {
-                    //record = true;
-                    for (int i=0; i<1; i++){
+                    record = true;
+                    /*for (int i=0; i<1; i++){
                         Float[] dataArray = new Float[12];
                         float count = 0.10f;
                         for (int j=0; j<dataArray.length; j++) {
@@ -70,7 +79,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             count+=0.10;
                         }
                         myDb.writeDataToDb(dataArray);
-                    }
+                    }*/
+
+                    //handleTempCSV();
                 }
                 else {Toast.makeText(MainActivity.this, "Please grant storage permission first",
                         Toast.LENGTH_SHORT)
@@ -84,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 record = false;
             }
         });
+        /*
         deleteDbButton = findViewById(R.id.deleteDbButton);
         deleteDbButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         Toast.LENGTH_SHORT)
                         .show();}
             }
-        });
+        });*/
 
         accInfoTV = findViewById(R.id.accInfoTV);
         gyroInfoTV = findViewById(R.id.gyroInfoTV);
@@ -163,16 +175,196 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             gyroscopeUncalib = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
         }*/
 
-        /*int samplingPeriod = 500000;
+        int samplingPeriod = 500000;
         //Registering sensor listeners
         sensorManager.registerListener(this, accelerometer, samplingPeriod);
         sensorManager.registerListener(this, gyroscope, samplingPeriod);
         sensorManager.registerListener(this, gravity, samplingPeriod);
-        sensorManager.registerListener(this, magnetometer, samplingPeriod);*/
+        sensorManager.registerListener(this, magnetometer, samplingPeriod);
         /*sensorManager.registerListener(this, accelerometerUncalib, samplingPeriod);
         sensorManager.registerListener(this, gyroscopeUncalib, samplingPeriod);*/
 
 
+    }
+
+    private void saveToArrayList(Float[] dataArray){
+        for (int i=0; i<dataArray.length; i++) {
+            String s1 = dataArray[0].toString();
+            String s2 = dataArray[1].toString();
+            String s3 = dataArray[2].toString();
+
+            String s4 = dataArray[3].toString();
+            String s5 = dataArray[4].toString();
+            String s6 = dataArray[5].toString();
+
+            String s7 = dataArray[6].toString();
+            String s8 = dataArray[7].toString();
+            String s9 = dataArray[8].toString();
+
+            String s10 = dataArray[9].toString();
+            String s11 = dataArray[10].toString();
+            String s12 = dataArray[11].toString();
+
+            //Getting current timestamp
+            Date date = new Date();
+            long timeInMiliseconds = date.getTime();
+            Timestamp timestamp = new Timestamp(timeInMiliseconds);
+            String tInMils = "#" + timeInMiliseconds;
+            String ts = "#" + timestamp;
+
+            bishaalArray.add(new String[]{tInMils, ts,
+                    s1, s2, s3,
+                    s4, s5, s6,
+                    s7, s8, s9,
+                    s10, s11, s12});
+        }
+    }
+
+    private void writeToCSV(Float[] dataArray){
+        String baseDir = Environment.getExternalStorageDirectory().getPath();
+        String fileName = "AnalysisData.csv";
+        String filePath = baseDir+File.separator+ fileName;
+        File f = new File(filePath);
+        CSVWriter writer;
+
+        ArrayList<String[]> dataArrayString= new ArrayList<>();
+        try {
+            // File exist
+            if (f.exists() && !f.isDirectory()) {
+                //Toast.makeText(MainActivity.this, "File updated", Toast.LENGTH_SHORT).show();
+                FileWriter mFileWriter = new FileWriter(filePath, true);
+                writer = new CSVWriter(mFileWriter);
+
+                for (int i=0; i<dataArray.length; i++) {
+                    String s1 = dataArray[0].toString();
+                    String s2 = dataArray[1].toString();
+                    String s3 = dataArray[2].toString();
+
+                    String s4 = dataArray[3].toString();
+                    String s5 = dataArray[4].toString();
+                    String s6 = dataArray[5].toString();
+
+                    String s7 = dataArray[6].toString();
+                    String s8 = dataArray[7].toString();
+                    String s9 = dataArray[8].toString();
+
+                    String s10 = dataArray[9].toString();
+                    String s11 = dataArray[10].toString();
+                    String s12 = dataArray[11].toString();
+
+                    //Getting current timestamp
+                    Date date= new Date();
+                    long timeInMiliseconds = date.getTime();
+                    Timestamp timestamp = new Timestamp(timeInMiliseconds);
+                    String tInMils = "#"+timeInMiliseconds;
+                    String ts = "#"+timestamp;
+
+                    dataArrayString.add(new String[]{tInMils,ts,
+                            s1, s2, s3,
+                            s4, s5, s6,
+                            s7, s8, s9,
+                            s10, s11, s12});
+
+                }
+
+               // System.out.println("Current : "+dataArrayString.toString() );
+                writer.writeAll(dataArrayString);
+
+            } else {
+                Toast.makeText(MainActivity.this, "File doesn't exist", Toast.LENGTH_SHORT).show();
+                writer = new CSVWriter(new FileWriter(filePath));
+                String[] csvHeader = ("timeInMilisecond#timestamp#heading1#heading2#heading3" +
+                        "#heading4#heading5#heading6" +
+                        "#heading7#heading8#heading9" +
+                        "#heading10#heading11#heading12").split("#");
+                writer.writeNext(csvHeader);
+                for (int i=0; i<dataArray.length; i++) {
+                    String s1 = dataArray[0].toString();
+                    String s2 = dataArray[1].toString();
+                    String s3 = dataArray[2].toString();
+
+                    String s4 = dataArray[3].toString();
+                    String s5 = dataArray[4].toString();
+                    String s6 = dataArray[5].toString();
+
+                    String s7 = dataArray[6].toString();
+                    String s8 = dataArray[7].toString();
+                    String s9 = dataArray[8].toString();
+
+                    String s10 = dataArray[9].toString();
+                    String s11 = dataArray[10].toString();
+                    String s12 = dataArray[11].toString();
+
+                    //Getting current timestamp
+                    Date date= new Date();
+                    long timeInMiliseconds = date.getTime();
+                    Timestamp timestamp = new Timestamp(timeInMiliseconds);
+                    String tInMils = "#"+timeInMiliseconds;
+                    String ts = "#"+timestamp;
+
+                    dataArrayString.add(new String[]{tInMils,ts,
+                            s1, s2, s3,
+                            s4, s5, s6,
+                            s7, s8, s9,
+                            s10, s11, s12});
+
+                }
+                writer.writeAll(dataArrayString);
+            }
+
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handleTempCSV(){
+        String baseDir = Environment.getExternalStorageDirectory().getPath();
+        String fileName = "AnalysisData.csv";
+        String filePath = baseDir+File.separator+ fileName;
+        File f = new File(filePath);
+        CSVWriter writer;
+
+        try {
+            // File exist
+            if (f.exists() && !f.isDirectory()) {
+                Toast.makeText(MainActivity.this, "File updated", Toast.LENGTH_SHORT).show();
+                FileWriter mFileWriter = new FileWriter(filePath, true);
+                writer = new CSVWriter(mFileWriter);
+
+                ArrayList<String[]> dataArray = new ArrayList<>();
+                float count = 0.0f;
+                for (int i=0; i<10; i++) {
+                    Float af = 0.1f+count;
+                    String aS = af.toString();
+                    Float bf = 0.1f+count;
+                    String bS = bf.toString();
+                    Float cf = 0.1f+count;
+                    String cS = cf.toString();
+
+                    //Getting current timestamp
+                    Date date= new Date();
+                    long timeInMiliseconds = date.getTime();
+                    Timestamp timestamp = new Timestamp(timeInMiliseconds);
+                    String tInMils = "#"+timeInMiliseconds;
+                    String ts = "#"+timestamp;
+
+                    dataArray.add(new String[]{tInMils,ts, aS, bS, cS});
+                    count += 0.10;
+                }
+
+                writer.writeAll(dataArray);
+
+            } else {
+                Toast.makeText(MainActivity.this, "File doesn't exist", Toast.LENGTH_SHORT).show();
+                writer = new CSVWriter(new FileWriter(filePath));
+                String[] csvHeader = "timeInMilisecond#timestamp#heading1#heading2#heading3".split("#");
+                writer.writeNext(csvHeader);
+            }
+            writer.close();
+        }
+        catch (Exception e){ e.printStackTrace(); }
     }
 
     private void checkSensorAvailibility(){
@@ -349,6 +541,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             //Write the event values into database
             //myDb.writeDataToDb(dataArray);
+            writeToCSV(dataArray);
         }
     }
 
