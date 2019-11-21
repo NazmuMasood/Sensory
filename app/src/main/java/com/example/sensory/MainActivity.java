@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             gyroscopeUncalib = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
         }*/
 
-        samplingPeriod = 500000;//in microseconds
+        samplingPeriod = 60000;//in microseconds
         //Registering sensor listeners
         sensorManager.registerListener(this, accelerometer, samplingPeriod);
         sensorManager.registerListener(this, gyroscope, samplingPeriod);
@@ -232,7 +232,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     CSVWriter writer; String filePath;
     private void writeToCSVnew(Float[] dataArray) {
         File f = new File(filePath);
-
+        Log.d("writeToCSVNew", String.format("dataArray: acc= %f,%f,%f, gyro= %f,%f,%f",
+                dataArray[0],dataArray[1],dataArray[2],
+                dataArray[3],dataArray[4],dataArray[5]));
         ArrayList<String[]> dataArrayString= new ArrayList<>();
         try {
             // File exist
@@ -285,10 +287,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    Float[] dataArray = new Float[6];
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (record) {
-            Float[] dataArray = new Float[6];
 
 //            float[] accelerometerReading = new float[3];
 //            float[] magnetometerReading = new float[3];
@@ -310,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 info = info + "userAcceleration.X " + userAccX + "\n" +
                         "userAcceleration.Y " + userAccY + "\n" +
-                        "userAcceleration.Z " + userAccZ + "\n\n";
+                        "userAcceleration.Z " + userAccZ + "\n";
 
                 accInfoTV.setText(info);
 
@@ -341,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 info = "rotationRate.X " + rotationRateX + "\n" +
                         "rotationRate.Y " + rotationRateY + "\n" +
-                        "rotationRate.Z " + rotationRateZ + "\n\n";
+                        "rotationRate.Z " + rotationRateZ + "\n";
 
                 gyroInfoTV.setText(info);
 
@@ -442,7 +444,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             //Write the event values into database
             //myDb.writeDataToDb(dataArray);
             //writeToCSV(dataArray);
-            writeToCSVnew(dataArray);
+            if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                writeToCSVnew(dataArray);
+            }
         }
     }
 
