@@ -207,11 +207,6 @@ public class MainActivity extends AppCompatActivity implements
             public void onClick(View v) {
                 record = false;
 
-                if (refreshNeeded){
-                    Toast.makeText(MainActivity.this, "Please refresh the timer first",
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
                 if (t != null){
                     t.cancel();
                 }
