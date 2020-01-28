@@ -5,6 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import android.app.Notification;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -66,8 +71,8 @@ public class MainActivity extends AppCompatActivity implements
     //Activity drop-down list implementation
     Spinner activitySpinner;
     String[] activities = new String[]{"Walking", "Running",
-            "Walking_upstairs", "Walking_upstairs"
-            , "Sitting", "Exercise", "Pushup", "Laying", "Running",
+            "Walking_upstairs", "Walking_downstairs"
+            , "Sitting", "Exercise", "Pushup", "Laying",
             "Falling_down", "Jumping"
     };
 
@@ -164,14 +169,29 @@ public class MainActivity extends AppCompatActivity implements
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            timerTV.setText(String.valueOf(minutes)+":"+String.valueOf(seconds));
+                                            timerTV.setText(/*String.valueOf(minutes)+":"+*/String.valueOf(seconds));
                                             seconds += 1;
+                                            //change
                                             if(seconds == 0)
                                             {
-                                                timerTV.setText(String.valueOf(minutes)+":"+String.valueOf(seconds));
+                                                timerTV.setText(/*String.valueOf(minutes)+":"+*/String.valueOf(seconds));
 
                                                 seconds=0;
-                                                minutes=minutes+1;
+                                               // minutes=minutes+1;
+                                            }
+                                            else if(seconds==31){
+                                                record = false;
+
+                                                if (t != null){
+                                                    t.cancel();
+                                                }
+                                                refreshButton.setVisibility(View.VISIBLE);
+                                                long endTime = System.currentTimeMillis();
+                                                timeTakenInSeconds = (endTime - startTime) / 1000;
+                                                makeEndScream();
+
+
+
                                             }
                                         }
 
@@ -185,6 +205,8 @@ public class MainActivity extends AppCompatActivity implements
                         }
                     }, 5000);
 
+
+
                     /*for (int i=0; i<1; i++){
                         Float[] dataArray = new Float[12];
                         float count = 0.10f;
@@ -195,12 +217,15 @@ public class MainActivity extends AppCompatActivity implements
                         myDb.writeDataToDb(dataArray);
                     }*/
                     //handleTempCSV();
+
+
                 }
                 else {Toast.makeText(MainActivity.this, "Please grant storage permission first",
                         Toast.LENGTH_SHORT)
                         .show();}
             }
         });
+        //stop button
         stopButton = findViewById(R.id.stopButton);
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -316,6 +341,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
     }
+
 
 
     CSVWriter writer; String filePath;
